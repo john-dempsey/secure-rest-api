@@ -38,7 +38,8 @@ class ProductController extends BaseController
         $validator = Validator::make($input, [
             'name' => 'required',
             'description' => 'required',
-            'price' => 'required|numeric|between:0,999.99'
+            'price' => 'required|numeric|between:0,999.99',
+            'supplier_id' => 'required|exists:suppliers,id'
         ]);
    
         if($validator->fails()){
@@ -81,7 +82,8 @@ class ProductController extends BaseController
         $validator = Validator::make($input, [
             'name' => 'required',
             'description' => 'required',
-            'price' => 'required|numeric|between:0,999.99'
+            'price' => 'required|numeric|between:0,999.99',
+            'supplier_id' => 'required|exists:suppliers,id'
         ]);
    
         if($validator->fails()){
