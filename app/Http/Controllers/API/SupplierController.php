@@ -9,6 +9,8 @@ use App\Http\Controllers\API\BaseController as BaseController;
 use App\Http\Resources\SupplierResource;
 use App\Models\Supplier;
 
+use Validator;
+
 class SupplierController extends BaseController
 {
     public function index(): JsonResponse
@@ -49,7 +51,7 @@ class SupplierController extends BaseController
         return $this->sendResponse(new SupplierResource($supplier), 'Supplier retrieved successfully.');
     }
 
-    public function update(Request $request, string $id): JsonResponse
+    public function update(Request $request, Supplier $supplier): JsonResponse
     {
         $input = $request->all();
    
@@ -73,7 +75,7 @@ class SupplierController extends BaseController
         return $this->sendResponse(new SupplierResource($supplier), 'Supplier updated successfully.');
     }
 
-    public function destroy(string $id): JsonResponse
+    public function destroy(Supplier $supplier): JsonResponse
     {
         $supplier->delete();
    
