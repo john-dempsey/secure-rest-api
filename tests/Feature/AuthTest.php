@@ -7,32 +7,23 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Database\Seeders\UserSeeder;
 use Tests\TestCase;
 
+use App\Models\User;
+
 class AuthTest extends TestCase
 {
     // Create the database and run the migrations in each test
-    use RefreshDatabase; 
+    use RefreshDatabase;
+    use WithFaker;
 
-    protected function setUp(): void
+    public function test_user_register(): void
     {
-        parent::setUp();
-        // Run the seeder UserSeeder
-        $this->seed(UserSeeder::class); 
-    }
-    
-    public function test_users_created(): void
-    {
-        $this->assertDatabaseCount('users', 10);
-    }
-
-    public function test_user_registered(): void
-    {
-        $this->assertDatabaseCount('users', 10);
-        $response = $this->postJson('/api/register', [
-            'name' => 'Daire Bloggs',
-            'email' => 'daire@bloggs.com',
+        $user = [
+            'name' => $this->faker->name,
+            'email' => $this->faker->unique()->safeEmail,
             'password' => 'mysecret',
             'c_password' => 'mysecret'
-        ]);
+        ];
+        $response = $this->postJson('/api/register', $user);
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -42,6 +33,7 @@ class AuthTest extends TestCase
             'message',
             'success'
         ]);
+
         $success = $response->json('success');
         $message = $response->json('message');
         $token = $response->json('data.token');
@@ -49,26 +41,49 @@ class AuthTest extends TestCase
         
         $this->assertEquals($success, true);
         $this->assertEquals($message, 'User register successfully.');
-        $this->assertEquals($name, 'Daire Bloggs');
+        $this->assertEquals($name, $user['name']);
         $this->assertNotNull($token);
 
-        $this->assertDatabaseCount('users', 11);
         $this->assertDatabaseHas('users', [
-            'name' => 'Daire Bloggs',
-            'email' => 'daire@bloggs.com'
+            'name' => $user['name'],
+            'email' => $user['email']
         ]);
     }
 
-    public function test_user_logged_in(): void
+    public function test_user_register_error(): void
     {
-        $response = $this->postJson('/api/register', [
-            'name' => 'Daire Bloggs',
-            'email' => 'daire@bloggs.com',
+        $user = [
+            'name' => $this->faker->name,
+            'email' => $this->faker->unique()->safeEmail,
             'password' => 'mysecret',
-            'c_password' => 'mysecret'
+            'c_password' => 'mysecret2'
+        ];
+        $response = $this->postJson('/api/register', $user);
+
+        $response->assertStatus(404);
+        $response->assertJsonStructure([
+            'data',
+            'message',
+            'success'
         ]);
+
+        $success = $response->json('success');
+        $message = $response->json('message');
+        
+        $this->assertEquals($success, false);
+        $this->assertEquals($message, 'Validation Error.');
+
+        $this->assertDatabaseMissing('users', [
+            'name' => $user['name'],
+            'email' => $user['email']
+        ]);
+    }
+
+    public function test_user_login(): void
+    {
+        $user = User::factory()->create();
         $response = $this->postJson('/api/login', [
-            'email' => 'daire@bloggs.com',
+            'email' => $user->email,
             'password' => 'mysecret'
         ]);
 
@@ -87,20 +102,36 @@ class AuthTest extends TestCase
 
         $this->assertEquals($success, true);
         $this->assertEquals($message, 'User login successfully.');
-        $this->assertEquals($name, 'Daire Bloggs');
+        $this->assertEquals($name, $user->name);
         $this->assertNotNull($token);
+    }
+
+    public function test_user_login_error(): void
+    {
+        $user = User::factory()->create();
+        $response = $this->postJson('/api/login', [
+            'email' => $user->email,
+            'password' => 'mysecret2'
+        ]);
+
+        $response->assertStatus(404);
+        $response->assertJsonStructure([
+            'data',
+            'message',
+            'success'
+        ]);
+        $success = $response->json('success');
+        $message = $response->json('message');
+
+        $this->assertEquals($success, false);
+        $this->assertEquals($message, 'Unauthorised.');
     }
 
     public function test_user_info(): void
     {
-        $response = $this->postJson('/api/register', [
-            'name' => 'Daire Bloggs',
-            'email' => 'daire@bloggs.com',
-            'password' => 'mysecret',
-            'c_password' => 'mysecret'
-        ]);
+        $user = User::factory()->create();
+        $token = $user->createToken('MyApp')->plainTextToken;
 
-        $token = $response->json('data.token');
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
                          ->getJson('/api/user');
 
@@ -116,7 +147,7 @@ class AuthTest extends TestCase
 
         $name = $response->json('name');
         $email = $response->json('email');
-        $this->assertEquals($name, 'Daire Bloggs');
-        $this->assertEquals($email, 'daire@bloggs.com');
+        $this->assertEquals($name, $user->name);
+        $this->assertEquals($email, $user->email);
     }
 }

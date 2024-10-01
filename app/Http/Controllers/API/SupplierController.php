@@ -78,7 +78,7 @@ class SupplierController extends BaseController
     public function destroy(Supplier $supplier): JsonResponse
     {
         $supplier->delete();
-   
+
         return $this->sendResponse([], 'Supplier deleted successfully.');
     }
 }
