@@ -130,11 +130,8 @@ class AuthTest extends TestCase
     public function test_user_info(): void
     {
         $user = User::factory()->create();
-        $token = $user->createToken('MyApp')->plainTextToken;
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-                         ->getJson('/api/user');
-
+        $response = $this->actingAs($user)->getJson('/api/user');
         $response->assertStatus(200);
         $response->assertJsonStructure([
             'id',
@@ -144,10 +141,7 @@ class AuthTest extends TestCase
             'created_at',
             'updated_at'
         ]);
-
-        $name = $response->json('name');
-        $email = $response->json('email');
-        $this->assertEquals($name, $user->name);
-        $this->assertEquals($email, $user->email);
+        $this->assertEquals($response->json('name'), $user->name);
+        $this->assertEquals($response->json('email'), $user->email);
     }
 }
