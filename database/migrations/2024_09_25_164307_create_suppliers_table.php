@@ -21,9 +21,7 @@ return new class extends Migration
         });
 
         Schema::table('products', function (Blueprint $table) {
-            if (DB::getDriverName() != 'sqlite') {
-                $table->foreignId('supplier_id')->constrained()->onDelete('restrict')->onDelete('restrict');
-            }
+            $table->foreignId('supplier_id')->constrained()->onUpdate('restrict')->onDelete('restrict');
         });
     }
 
@@ -33,9 +31,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            if (DB::getDriverName() != 'sqlite') {
-                $table->dropForeign(['products_supplier_id_foreign']);
-            }
+            $table->dropForeign(['supplier_id']);
             $table->dropColumn('supplier_id');
         });
         Schema::dropIfExists('suppliers');
