@@ -17,17 +17,5 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
-            if ($request->is('api/*')) {
-                $response = [
-                    'success' => false,
-                    'message' => 'Resource not found.',
-                    'data' => [
-                        $e->getMessage()
-                    ]
-                ];
-                
-                return response()->json($response, 404);
-            }
-        });
+        //
     })->create();

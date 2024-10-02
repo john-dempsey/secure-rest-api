@@ -273,7 +273,6 @@ class SupplierTest extends TestCase
 
         $response->assertStatus(404);
         $response->assertJsonStructure([
-            'data',
             'message',
             'success'
         ]);
@@ -282,7 +281,7 @@ class SupplierTest extends TestCase
         $message = $response->json('message');
         
         $this->assertEquals($success, false);
-        $this->assertEquals($message, 'Resource not found.');
+        $this->assertEquals($message, 'Supplier not found.');
 
         $this->assertDatabaseMissing('suppliers', [
             'id' => $missing_supplier_id
@@ -327,7 +326,6 @@ class SupplierTest extends TestCase
 
         $response->assertStatus(404);
         $response->assertJsonStructure([
-            'data',
             'message',
             'success'
         ]);
@@ -336,7 +334,7 @@ class SupplierTest extends TestCase
         $message = $response->json('message');
         
         $this->assertEquals($success, false);
-        $this->assertEquals($message, 'Resource not found.');
+        $this->assertEquals($message, 'Supplier not found.');
 
         $this->assertDatabaseMissing('suppliers', [
             'id' => $missing_supplier_id
