@@ -66,4 +66,27 @@ class FactoryAndSeederTest extends TestCase
         $this->seed(SupplierSeeder::class);
         $this->assertDatabaseCount('suppliers', 10);
     }
+
+    public function test_customer_factory()
+    {
+        $customer = Supplier::factory()->make();
+
+        $this->assertInstanceOf(Supplier::class, $customer);
+        $this->assertNotNull($customer->name);
+        $this->assertNotNull($customer->address);
+        $this->assertNotNull($customer->phone);
+        $this->assertNotNull($customer->email);
+
+        $customer = Supplier::factory()->make();
+        $this->assertDatabaseMissing('customers', ['name' => $customer->name]);
+
+        $customer = Supplier::factory()->create();
+        $this->assertDatabaseHas('customers', ['name' => $customer->name]);
+    }
+
+    public function test_customer_seeder()
+    {
+        $this->seed(SupplierSeeder::class);
+        $this->assertDatabaseCount('customers', 10);
+    }
 }

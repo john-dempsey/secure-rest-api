@@ -11,17 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('suppliers', function (Blueprint $table) {
+        Schema::create('customers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('address');
             $table->string('phone');
             $table->string('email');
             $table->timestamps();
-        });
-
-        Schema::table('products', function (Blueprint $table) {
-            $table->foreignId('supplier_id')->constrained()->onUpdate('restrict')->onDelete('restrict');
         });
     }
 
@@ -30,10 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->dropForeign('supplier_id');
-            $table->dropColumn('supplier_id');
-        });
-        Schema::dropIfExists('suppliers');
+        Schema::dropIfExists('customers');
     }
 };
