@@ -26,7 +26,7 @@ class UserFactory extends Factory
         $name = fake('en_GB')->unique()->name();
         return [
             'name' => $name,
-            'email' => Str::slug($name) . '@' . fake()->safeEmailDomain(),
+            'email' => Str::slug($name) . '@bloggs.com',
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('mysecret'),
             'remember_token' => Str::random(10),

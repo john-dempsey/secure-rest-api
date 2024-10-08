@@ -9,10 +9,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 use Tests\TestCase;
 
-use App\Models\Supplier;
+use App\Models\Product;
 use App\Models\Role;
 
-class SupplierTest extends TestCase
+class ProductTest extends TestCase
 {
     // Create the database and run the migrations in each test
     use RefreshDatabase; 
@@ -36,10 +36,10 @@ class SupplierTest extends TestCase
         $this->supplierUser = $supplierRole->users()->first();
     }
 
-    public function test_supplier_index(): void
+    public function test_product_index(): void
     {
         $response = $this->actingAs($this->supplierUser)
-                         ->getJson(route('suppliers.index'));
+                         ->getJson(route('products.index'));
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -49,9 +49,9 @@ class SupplierTest extends TestCase
                 '*' => [
                     'id',
                     'name',
-                    'address',
-                    'phone',
-                    'email',
+                    'description',
+                    'price',
+                    'supplier_id',
                     'created_at',
                     'updated_at',
                 ]
@@ -59,17 +59,17 @@ class SupplierTest extends TestCase
         ]);
         $success = $response->json('success');
         $message = $response->json('message');
-        $suppliers = $response->json('data');
+        $products = $response->json('data');
 
         $this->assertEquals($success, true);
-        $this->assertEquals($message, 'Suppliers retrieved successfully.');
-        $this->assertCount(10, $suppliers);
+        $this->assertEquals($message, 'Products retrieved successfully.');
+        $this->assertCount(100, $products);
     }
 
-    public function test_supplier_index_authorisation_fail(): void
+    public function test_product_index_authorisation_fail(): void
     {
         $response = $this->actingAs($this->customerUser)
-                         ->getJson(route('suppliers.index'));
+                         ->getJson(route('products.index'));
 
         $response->assertStatus(403);
         $response->assertJsonStructure([
@@ -84,10 +84,10 @@ class SupplierTest extends TestCase
         $this->assertEquals($message, 'Permission denied.');
     }
 
-    public function test_supplier_index_authorisation_super(): void
+    public function test_product_index_authorisation_superuser(): void
     {
         $response = $this->actingAs($this->superUser)
-                         ->getJson(route('suppliers.index'));
+                         ->getJson(route('products.index'));
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -97,9 +97,9 @@ class SupplierTest extends TestCase
                 '*' => [
                     'id',
                     'name',
-                    'address',
-                    'phone',
-                    'email',
+                    'description',
+                    'price',
+                    'supplier_id',
                     'created_at',
                     'updated_at',
                 ]
@@ -107,18 +107,18 @@ class SupplierTest extends TestCase
         ]);
         $success = $response->json('success');
         $message = $response->json('message');
-        $suppliers = $response->json('data');
+        $products = $response->json('data');
 
         $this->assertEquals($success, true);
-        $this->assertEquals($message, 'Suppliers retrieved successfully.');
-        $this->assertCount(10, $suppliers);
+        $this->assertEquals($message, 'Products retrieved successfully.');
+        $this->assertCount(100, $products);
     }
 
-    public function test_supplier_show(): void
+    public function test_product_show(): void
     {
-        $supplier = Supplier::factory()->create();
+        $product = Product::factory()->create();
         $response = $this->actingAs($this->supplierUser)
-                         ->getJson(route('suppliers.show', $supplier->id));
+                         ->getJson(route('products.show', $product->id));
         $response->assertStatus(200);
         $response->assertJsonStructure([
             'success',
@@ -126,9 +126,9 @@ class SupplierTest extends TestCase
             'data' => [
                 'id',
                 'name',
-                'address',
-                'phone',
-                'email',
+                'description',
+                'price',
+                'supplier_id',
                 'created_at',
                 'updated_at',
             ]
@@ -137,31 +137,31 @@ class SupplierTest extends TestCase
         $success = $response->json('success');
         $message = $response->json('message');
         $name = $response->json('data.name');
-        $address = $response->json('data.address');
-        $phone = $response->json('data.phone');
-        $email = $response->json('data.email');
+        $description = $response->json('data.description');
+        $price = $response->json('data.price');
+        $supplier_id = $response->json('data.supplier_id');
 
         $this->assertEquals($success, true);
-        $this->assertEquals($message, 'Supplier retrieved successfully.');
-        $this->assertEquals($name, $supplier->name);
-        $this->assertEquals($address, $supplier->address);
-        $this->assertEquals($phone, $supplier->phone);
-        $this->assertEquals($email, $supplier->email);
+        $this->assertEquals($message, 'Product retrieved successfully.');
+        $this->assertEquals($name, $product->name);
+        $this->assertEquals($description, $product->description);
+        $this->assertEquals($price, $product->price);
+        $this->assertEquals($supplier_id, $product->supplier_id);
 
-        $this->assertDatabaseHas('suppliers', [
-            'id' => $supplier->id
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id
         ]);
     }
 
-    public function test_supplier_show_not_found_error(): void
+    public function test_product_show_not_found_error(): void
     {
-        $missing_supplier_id = mt_rand();
-        while(Supplier::where('id', $missing_supplier_id)->count() > 0) {
-                $missing_supplier_id = mt_rand();
+        $missing_productid = mt_rand();
+        while(Product::where('id', $missing_productid)->count() > 0) {
+                $missing_productid = mt_rand();
         }
         
         $response = $this->actingAs($this->supplierUser)
-                         ->getJson(route('suppliers.show', $missing_supplier_id));
+                         ->getJson(route('products.show', $missing_productid));
 
         $response->assertStatus(404);
         $response->assertJsonStructure([
@@ -173,18 +173,18 @@ class SupplierTest extends TestCase
         $message = $response->json('message');
         
         $this->assertEquals($success, false);
-        $this->assertEquals($message, 'Supplier not found.');
+        $this->assertEquals($message, 'Product not found.');
 
-        $this->assertDatabaseMissing('suppliers', [
-            'id' => $missing_supplier_id
+        $this->assertDatabaseMissing('products', [
+            'id' => $missing_productid
         ]);
     }
 
-    public function test_supplier_store(): void
+    public function test_product_store(): void
     {
-        $supplier = Supplier::factory()->make();
+        $product = Product::factory()->make();
         $response = $this->actingAs($this->supplierUser)
-                         ->postJson(route('suppliers.store'), $supplier->toArray());
+                         ->postJson(route('products.store'), $product->toArray());
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -193,9 +193,9 @@ class SupplierTest extends TestCase
             'data' => [
                 'id',
                 'name',
-                'address',
-                'phone',
-                'email',
+                'description',
+                'price',
+                'supplier_id',
                 'created_at',
                 'updated_at',
             ]
@@ -204,28 +204,28 @@ class SupplierTest extends TestCase
         $success = $response->json('success');
         $message = $response->json('message');
         $name = $response->json('data.name');
-        $address = $response->json('data.address');
-        $phone = $response->json('data.phone');
-        $email = $response->json('data.email');
+        $description = $response->json('data.description');
+        $price = $response->json('data.price');
+        $supplier_id = $response->json('data.supplier_id');
 
         $this->assertEquals($success, true);
-        $this->assertEquals($message, 'Supplier created successfully.');
-        $this->assertEquals($name, $supplier->name);
-        $this->assertEquals($address, $supplier->address);
-        $this->assertEquals($phone, $supplier->phone);
-        $this->assertEquals($email, $supplier->email);
+        $this->assertEquals($message, 'Product created successfully.');
+        $this->assertEquals($name, $product->name);
+        $this->assertEquals($description, $product->description);
+        $this->assertEquals($price, $product->price);
+        $this->assertEquals($supplier_id, $product->supplier_id);
 
-        $this->assertDatabaseHas('suppliers', [
-            'name' => $supplier->name
+        $this->assertDatabaseHas('products', [
+            'name' => $product->name
         ]);
     }
 
-    public function test_supplier_store_validation_error(): void
+    public function test_product_store_validation_error(): void
     {
-        $supplier = Supplier::factory()->make();
-        $supplier->name = '';
+        $product = Product::factory()->make();
+        $product->name = '';
         $response = $this->actingAs($this->supplierUser)
-                         ->postJson(route('suppliers.store'), $supplier->toArray());
+                         ->postJson(route('products.store'), $product->toArray());
 
         $response->assertStatus(422);
         $response->assertJsonStructure([
@@ -240,17 +240,17 @@ class SupplierTest extends TestCase
         $this->assertEquals($success, false);
         $this->assertEquals($message, 'Validation Error.');
 
-        $this->assertDatabaseMissing('suppliers', [
-            'name' => $supplier->name
+        $this->assertDatabaseMissing('products', [
+            'name' => $product->name
         ]);
     }
 
-    public function test_supplier_update(): void
+    public function test_product_update(): void
     {
-        $supplier = Supplier::factory()->create();
-        $updatedSupplier = Supplier::factory()->make();
+        $product = Product::factory()->create();
+        $updatedProduct = Product::factory()->make();
         $response = $this->actingAs($this->supplierUser)
-                         ->putJson(route('suppliers.update', $supplier->id), $updatedSupplier->toArray());
+                         ->putJson(route('products.update', $product->id), $updatedProduct->toArray());
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -259,9 +259,9 @@ class SupplierTest extends TestCase
             'data' => [
                 'id',
                 'name',
-                'address',
-                'phone',
-                'email',
+                'description',
+                'price',
+                'supplier_id',
                 'created_at',
                 'updated_at',
             ]
@@ -270,29 +270,29 @@ class SupplierTest extends TestCase
         $success = $response->json('success');
         $message = $response->json('message');
         $name = $response->json('data.name');
-        $address = $response->json('data.address');
-        $phone = $response->json('data.phone');
-        $email = $response->json('data.email');
+        $description = $response->json('data.description');
+        $price = $response->json('data.price');
+        $supplier_id = $response->json('data.supplier_id');
 
         $this->assertEquals($success, true);
-        $this->assertEquals($message, 'Supplier updated successfully.');
-        $this->assertEquals($name, $updatedSupplier->name);
-        $this->assertEquals($address, $updatedSupplier->address);
-        $this->assertEquals($phone, $updatedSupplier->phone);
-        $this->assertEquals($email, $updatedSupplier->email);
+        $this->assertEquals($message, 'Product updated successfully.');
+        $this->assertEquals($name, $updatedProduct->name);
+        $this->assertEquals($description, $updatedProduct->description);
+        $this->assertEquals($price, $updatedProduct->price);
+        $this->assertEquals($supplier_id, $updatedProduct->supplier_id);
 
-        $this->assertDatabaseHas('suppliers', [
-            'name' => $updatedSupplier->name
+        $this->assertDatabaseHas('products', [
+            'name' => $updatedProduct->name
         ]);
     }
 
-    public function test_supplier_update_validation_error(): void
+    public function test_product_update_validation_error(): void
     {
-        $supplier = Supplier::factory()->create();
-        $updatedSupplier = Supplier::factory()->make();
-        $updatedSupplier->name = '';
+        $product = Product::factory()->create();
+        $updatedProduct = Product::factory()->make();
+        $updatedProduct->name = '';
         $response = $this->actingAs($this->supplierUser)
-                         ->putJson(route('suppliers.update', $supplier->id), $updatedSupplier->toArray());
+                         ->putJson(route('products.update', $product->id), $updatedProduct->toArray());
 
         $response->assertStatus(422);
         $response->assertJsonStructure([
@@ -307,23 +307,23 @@ class SupplierTest extends TestCase
         $this->assertEquals($success, false);
         $this->assertEquals($message, 'Validation Error.');
 
-        $this->assertDatabaseMissing('suppliers', [
-            'name' => $updatedSupplier->name
+        $this->assertDatabaseMissing('products', [
+            'name' => $updatedProduct->name
         ]);
-        $this->assertDatabaseHas('suppliers', [
-            'name' => $supplier->name
+        $this->assertDatabaseHas('products', [
+            'name' => $product->name
         ]);
     }
 
-    public function test_supplier_update_not_found_error(): void
+    public function test_product_update_not_found_error(): void
     {
-        $updatedSupplier = Supplier::factory()->make();
-        $missing_supplier_id = mt_rand();
-        while(Supplier::where('id', $missing_supplier_id)->count() > 0) {
-                $missing_supplier_id = mt_rand();
+        $updatedProduct = Product::factory()->make();
+        $missing_productid = mt_rand();
+        while(Product::where('id', $missing_productid)->count() > 0) {
+                $missing_productid = mt_rand();
         }
         $response = $this->actingAs($this->supplierUser)
-                         ->putJson(route('suppliers.update', $missing_supplier_id), $updatedSupplier->toArray());
+                         ->putJson(route('products.update', $missing_productid), $updatedProduct->toArray());
 
         $response->assertStatus(404);
         $response->assertJsonStructure([
@@ -335,18 +335,18 @@ class SupplierTest extends TestCase
         $message = $response->json('message');
         
         $this->assertEquals($success, false);
-        $this->assertEquals($message, 'Supplier not found.');
+        $this->assertEquals($message, 'Product not found.');
 
-        $this->assertDatabaseMissing('suppliers', [
-            'id' => $missing_supplier_id
+        $this->assertDatabaseMissing('products', [
+            'id' => $missing_productid
         ]);
     }
 
-    public function test_supplier_destroy(): void
+    public function test_product_destroy(): void
     {
-        $supplier = Supplier::factory()->create();
+        $product = Product::factory()->create();
         $response = $this->actingAs($this->supplierUser)
-                         ->deleteJson(route('suppliers.destroy', $supplier->id));
+                         ->deleteJson(route('products.destroy', $product->id));
         
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -360,23 +360,23 @@ class SupplierTest extends TestCase
         $data = $response->json('data');
 
         $this->assertEquals($success, true);
-        $this->assertEquals($message, 'Supplier deleted successfully.');
+        $this->assertEquals($message, 'Product deleted successfully.');
         $this->assertEmpty($data);
 
-        $this->assertDatabaseMissing('suppliers', [
-            'id' => $supplier->id,
+        $this->assertDatabaseMissing('products', [
+            'id' => $product->id,
         ]);
     }
 
-    public function test_supplier_destroy_not_found_error(): void
+    public function test_product_destroy_not_found_error(): void
     {
-        $updatedSupplier = Supplier::factory()->make();
-        $missing_supplier_id = mt_rand();
-        while(Supplier::where('id', $missing_supplier_id)->count() > 0) {
-                $missing_supplier_id = mt_rand();
+        $updatedProduct = Product::factory()->make();
+        $missing_productid = mt_rand();
+        while(Product::where('id', $missing_productid)->count() > 0) {
+                $missing_productid = mt_rand();
         }
         $response = $this->actingAs($this->supplierUser)
-                         ->deleteJson(route('suppliers.destroy', $missing_supplier_id));
+                         ->deleteJson(route('products.destroy', $missing_productid));
 
         $response->assertStatus(404);
         $response->assertJsonStructure([
@@ -388,10 +388,10 @@ class SupplierTest extends TestCase
         $message = $response->json('message');
         
         $this->assertEquals($success, false);
-        $this->assertEquals($message, 'Supplier not found.');
+        $this->assertEquals($message, 'Product not found.');
 
-        $this->assertDatabaseMissing('suppliers', [
-            'id' => $missing_supplier_id
+        $this->assertDatabaseMissing('products', [
+            'id' => $missing_productid
         ]);
     }
 }

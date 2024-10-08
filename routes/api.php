@@ -14,7 +14,7 @@ Route::controller(AuthController::class)->group(function(){
 });
 
 Route::get('/user', function (Request $request) {
-    return $request->user();
+    return $request->user()->load('roles');
 })->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group( function () {

@@ -8,31 +8,85 @@ use Illuminate\Support\Facades\Exceptions;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 use Tests\TestCase;
-use Database\Seeders\CustomerSeeder;
 
 use App\Models\Customer;
-use App\Models\User;
+use App\Models\Role;
 
 class CustomerTest extends TestCase
 {
     // Create the database and run the migrations in each test
     use RefreshDatabase; 
 
-    private $token;
+    private $superUser;
+    private $customerUser;
+    private $supplierUser;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->seed(CustomerSeeder::class);
+        $this->seed();
 
-        $user = User::factory()->create();
-        $this->token = $user->createToken('MyApp')->plainTextToken;
+        $superRole = Role::where('name', 'superuser')->first();
+        $customerRole = Role::where('name', 'customer')->first();
+        $supplierRole = Role::where('name', 'supplier')->first();
+
+        $this->superUser = $superRole->users()->first();
+        $this->customerUser = $customerRole->users()->first();
+        $this->supplierUser = $supplierRole->users()->first();
     }
 
     public function test_customer_index(): void
     {
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->actingAs($this->customerUser)
+                         ->getJson(route('customers.index'));
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'success',
+            'message',
+            'data' => [
+                '*' => [
+                    'id',
+                    'name',
+                    'address',
+                    'phone',
+                    'email',
+                    'created_at',
+                    'updated_at',
+                ]
+            ]
+        ]);
+        $success = $response->json('success');
+        $message = $response->json('message');
+        $customers = $response->json('data');
+
+        $this->assertEquals($success, true);
+        $this->assertEquals($message, 'Customers retrieved successfully.');
+        $this->assertCount(10, $customers);
+    }
+
+    public function test_customer_index_authorisation_fail(): void
+    {
+        $response = $this->actingAs($this->supplierUser)
+                         ->getJson(route('customers.index'));
+
+        $response->assertStatus(403);
+        $response->assertJsonStructure([
+            'success',
+            'message',
+            'data'
+        ]);
+        $success = $response->json('success');
+        $message = $response->json('message');
+
+        $this->assertEquals($success, false);
+        $this->assertEquals($message, 'Permission denied.');
+    }
+
+    public function test_customer_index_authorisation_superuser(): void
+    {
+        $response = $this->actingAs($this->superUser)
                          ->getJson(route('customers.index'));
 
         $response->assertStatus(200);
@@ -63,7 +117,7 @@ class CustomerTest extends TestCase
     public function test_customer_show(): void
     {
         $customer = Customer::factory()->create();
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->actingAs($this->customerUser)
                          ->getJson(route('customers.show', $customer->id));
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -106,7 +160,7 @@ class CustomerTest extends TestCase
                 $missing_customer_id = mt_rand();
         }
         
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->actingAs($this->customerUser)
                          ->getJson(route('customers.show', $missing_customer_id));
 
         $response->assertStatus(404);
@@ -129,7 +183,7 @@ class CustomerTest extends TestCase
     public function test_customer_store(): void
     {
         $customer = Customer::factory()->make();
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->actingAs($this->customerUser)
                          ->postJson(route('customers.store'), $customer->toArray());
 
         $response->assertStatus(200);
@@ -170,10 +224,10 @@ class CustomerTest extends TestCase
     {
         $customer = Customer::factory()->make();
         $customer->name = '';
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->actingAs($this->customerUser)
                          ->postJson(route('customers.store'), $customer->toArray());
 
-        $response->assertStatus(404);
+        $response->assertStatus(422);
         $response->assertJsonStructure([
             'data',
             'message',
@@ -195,7 +249,7 @@ class CustomerTest extends TestCase
     {
         $customer = Customer::factory()->create();
         $updatedCustomer = Customer::factory()->make();
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->actingAs($this->customerUser)
                          ->putJson(route('customers.update', $customer->id), $updatedCustomer->toArray());
 
         $response->assertStatus(200);
@@ -237,10 +291,10 @@ class CustomerTest extends TestCase
         $customer = Customer::factory()->create();
         $updatedCustomer = Customer::factory()->make();
         $updatedCustomer->name = '';
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->actingAs($this->customerUser)
                          ->putJson(route('customers.update', $customer->id), $updatedCustomer->toArray());
 
-        $response->assertStatus(404);
+        $response->assertStatus(422);
         $response->assertJsonStructure([
             'data',
             'message',
@@ -268,7 +322,7 @@ class CustomerTest extends TestCase
         while(Customer::where('id', $missing_customer_id)->count() > 0) {
                 $missing_customer_id = mt_rand();
         }
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->actingAs($this->customerUser)
                          ->putJson(route('customers.update', $missing_customer_id), $updatedCustomer->toArray());
 
         $response->assertStatus(404);
@@ -291,7 +345,7 @@ class CustomerTest extends TestCase
     public function test_customer_destroy(): void
     {
         $customer = Customer::factory()->create();
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->actingAs($this->customerUser)
                          ->deleteJson(route('customers.destroy', $customer->id));
         
         $response->assertStatus(200);
@@ -321,7 +375,7 @@ class CustomerTest extends TestCase
         while(Customer::where('id', $missing_customer_id)->count() > 0) {
                 $missing_customer_id = mt_rand();
         }
-        $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
+        $response = $this->actingAs($this->customerUser)
                          ->deleteJson(route('customers.destroy', $missing_customer_id));
 
         $response->assertStatus(404);

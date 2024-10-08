@@ -4,11 +4,15 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
 
+use Tests\TestCase;
+use App\Models\Customer;
 use App\Models\Supplier;
 use App\Models\User;
+use Database\Seeders\CustomerSeeder;
 use Database\Seeders\SupplierSeeder;
+use Database\Seeders\RoleSeeder;
+use Database\Seeders\PermissionSeeder;
 use Database\Seeders\UserSeeder;
 
 class FactoryAndSeederTest extends TestCase
@@ -18,6 +22,23 @@ class FactoryAndSeederTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+    }
+
+    public function test_role_seeder()
+    {
+        $this->seed(RoleSeeder::class);
+        $this->assertDatabaseCount('roles', 4);
+        $this->assertDatabaseHas('roles', ['name' => 'superuser']);
+        $this->assertDatabaseHas('roles', ['name' => 'admin'    ]);
+        $this->assertDatabaseHas('roles', ['name' => 'customer' ]);
+        $this->assertDatabaseHas('roles', ['name' => 'supplier' ]);
+    }
+
+    public function test_permission_seeder()
+    {
+        $this->seed(RoleSeeder::class);
+        $this->seed(PermissionSeeder::class);
+        $this->assertDatabaseCount('permissions', 35);
     }
 
     public function test_user_factory()
@@ -40,8 +61,10 @@ class FactoryAndSeederTest extends TestCase
 
     public function test_user_seeder()
     {
+        $this->seed(RoleSeeder::class);
+        $this->seed(PermissionSeeder::class);
         $this->seed(UserSeeder::class);
-        $this->assertDatabaseCount('users', 10);
+        $this->assertDatabaseCount('users', 4);
     }
 
     public function test_supplier_factory()
@@ -69,24 +92,24 @@ class FactoryAndSeederTest extends TestCase
 
     public function test_customer_factory()
     {
-        $customer = Supplier::factory()->make();
+        $customer = Customer::factory()->make();
 
-        $this->assertInstanceOf(Supplier::class, $customer);
+        $this->assertInstanceOf(Customer::class, $customer);
         $this->assertNotNull($customer->name);
         $this->assertNotNull($customer->address);
         $this->assertNotNull($customer->phone);
         $this->assertNotNull($customer->email);
 
-        $customer = Supplier::factory()->make();
+        $customer = Customer::factory()->make();
         $this->assertDatabaseMissing('customers', ['name' => $customer->name]);
 
-        $customer = Supplier::factory()->create();
+        $customer = Customer::factory()->create();
         $this->assertDatabaseHas('customers', ['name' => $customer->name]);
     }
 
     public function test_customer_seeder()
     {
-        $this->seed(SupplierSeeder::class);
+        $this->seed(CustomerSeeder::class);
         $this->assertDatabaseCount('customers', 10);
     }
 }

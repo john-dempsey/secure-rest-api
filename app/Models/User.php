@@ -3,7 +3,9 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -44,5 +46,49 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class);
+    }
+
+    public function hasRole(Role $role): bool
+    {
+        return $this->roles->contains($role);
+    }
+
+    public function assignRole(Role $role): void
+    {
+        if (!$this->hasRole($role)) {
+            $this->roles()->attach($role);
+        }
+    }
+
+    public function removeRole(Role $role): void
+    {
+        if ($this->hasRole($role)) { 
+            $this->roles()->detach($role);
+        }
+    }
+
+    public function getPermissions()
+    {
+        $permissions = new Collection();
+        foreach ($this->roles as $role) {
+            foreach ($role->permissions as $permission) {
+                if (!$permissions->contains($permission)) {
+                    $permissions->push($permission);
+                }
+            }
+        }
+        return $permissions;
+    }
+
+    public function hasPermission(Permission $permission): bool
+    {
+        return $this->roles->contains(
+            fn (Role $role) => $role->hasPermission($permission)
+        );
     }
 }
