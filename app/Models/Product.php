@@ -17,4 +17,14 @@ class Product extends Model
     protected $fillable = [
         'name', 'description', 'price', 'supplier_id'
     ];
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+
+    public function orders()
+    {
+        return $this->belongsToMany(Order::class)->withPivot('quantity', 'price')->withTimestamps();
+    }
 }

@@ -73,6 +73,56 @@ return [
             'replace_placeholders' => true,
         ],
 
+        "debug" => [
+            'driver'  => 'monolog',
+            'handler' => Monolog\Handler\FilterHandler::class,
+            'with' => [
+                'handler' => new Monolog\Handler\RotatingFileHandler(storage_path('logs/debug.log'), 15),
+                'minLevelOrList' => [Monolog\Logger::DEBUG],
+            ],
+        ],
+
+        "info" => [
+            'driver'  => 'monolog',
+            'handler' => Monolog\Handler\FilterHandler::class,
+            'with' => [
+                'handler' => new Monolog\Handler\RotatingFileHandler(storage_path('logs/info.log'), 15),
+                'minLevelOrList' => [Monolog\Logger::INFO],
+            ],
+        ],
+
+        "warning" => [
+            'driver'  => 'monolog',
+            'handler' => Monolog\Handler\FilterHandler::class,
+            'with' => [
+                'handler' => new Monolog\Handler\RotatingFileHandler(storage_path('logs/warning.log'), 15),
+                'minLevelOrList' => [Monolog\Logger::NOTICE, Monolog\Logger::WARNING],
+            ],
+        ],
+
+        "critical" => [
+            'driver'  => 'monolog',
+            'handler' => Monolog\Handler\FilterHandler::class,
+            'with' => [
+                'handler' => new Monolog\Handler\RotatingFileHandler(storage_path('logs/critical.log'), 15),
+                'minLevelOrList' => [Monolog\Logger::ERROR, Monolog\Logger::CRITICAL],
+            ],
+        ],
+
+        "emergency" => [
+            'driver'  => 'monolog',
+            'handler' => Monolog\Handler\FilterHandler::class,
+            'with' => [
+                'handler' => new Monolog\Handler\RotatingFileHandler(storage_path('logs/emergency.log'), 15),
+                'minLevelOrList' => [Monolog\Logger::ALERT, Monolog\Logger::EMERGENCY],
+            ],
+        ],
+
+        "deprecations" => [
+            "driver" => "single",
+            "path" => storage_path("logs/deprecation-warnings.log"),
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

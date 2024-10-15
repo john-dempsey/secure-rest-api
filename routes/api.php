@@ -7,6 +7,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\CustomerController;
 use App\Http\Controllers\API\SupplierController;
 use App\Http\Controllers\API\ProductController;
+use App\Http\Controllers\API\OrderController;
 
 Route::controller(AuthController::class)->group(function(){
     Route::post('register', 'register');
@@ -38,6 +39,14 @@ Route::middleware('auth:sanctum')->group( function () {
         $response = [
             'success' => false,
             'message' => 'Product not found.'
+        ];
+        
+        return response()->json($response, 404);
+    });
+    Route::apiResource('orders', OrderController::class)->missing(function (Request $request) {
+        $response = [
+            'success' => false,
+            'message' => 'Order not found.'
         ];
         
         return response()->json($response, 404);
