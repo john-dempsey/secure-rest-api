@@ -5,9 +5,12 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+
+use App\Models\Order;
 
 class OrderProcessed extends Mailable implements ShouldQueue
 {
@@ -28,14 +31,10 @@ class OrderProcessed extends Mailable implements ShouldQueue
 
     public function content(): Content
     {
+        $this->order->load('customer');
+        $this->order->load('products');
         return new Content(
             view: 'emails.orders.processed',
-            text: 'emails.orders.processed_plain',
-            data: [
-                'orderId' => $this->order->id,
-                'orderTotal' => $this->order->totalAmount(),
-                'orderStatus' => $this->status,
-            ],
         );
     }
 
