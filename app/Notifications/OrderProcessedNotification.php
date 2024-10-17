@@ -7,9 +7,10 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
+use App\Mail\OrderProcessedMail;
 use App\Models\Order;
 
-class OrderNotification extends Notification
+class OrderProcessedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -26,9 +27,12 @@ class OrderNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->subject('Order notification.')
-                    ->greeting('Hello!')
-                    ->line('Your order number ' . $this->order->id . ' has been ' . $this->status)
-                    ->line('Thank you for using our business!');
+                    ->subject('Order details')
+                    ->from('jane@bloggs.com', 'Jane Bloggs')
+                    ->view(
+                        'emails.orders.processed',
+                        ['order' => $this->order, 'status' => $this->status]
+                    );
+        
     }
 }

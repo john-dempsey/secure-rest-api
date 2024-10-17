@@ -13,7 +13,7 @@ use Tests\TestCase;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Role;
-use App\Events\OrderProcessed;
+use App\Events\OrderProcessedEvent;
 
 class OrderTest extends TestCase
 {
@@ -53,6 +53,6 @@ class OrderTest extends TestCase
 
         $response->assertStatus(200);
 
-        Event::assertDispatched(OrderProcessed::class);
+        Event::assertDispatched(OrderProcessedEvent::class);
     }
 }

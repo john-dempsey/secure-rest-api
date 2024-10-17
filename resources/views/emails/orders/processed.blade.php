@@ -11,7 +11,11 @@
     <p>Order Details:</p>
     <ul>
         @foreach ($order->products as $item)
-            <li>{{ $item->name }} - Quantity: {{ $item->pivot->quantity }}, price: {{ $item->pivot->price }}</li>
+            <li>
+                {{ $item->name }} - 
+                Quantity: {{ $item->pivot->quantity }}, 
+                price: {{ $item->pivot->price }}
+            </li>
         @endforeach
     </ul>
     <p>Total Amount: <strong>${{ $order->totalAmount() }}</strong></p>

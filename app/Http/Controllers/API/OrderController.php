@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 use App\Http\Controllers\API\BaseController as BaseController;
 use App\Http\Requests\OrderRequest;
@@ -198,7 +199,7 @@ class OrderController extends BaseController
             $order->delete();
             DB::commit();
 
-            OrderProcessedEvent::dispatch($order, 'deleted');
+            // OrderProcessedEvent::dispatch($order, 'deleted');
 
             return $this->sendResponse(
                 [], 'Order deleted successfully.'
