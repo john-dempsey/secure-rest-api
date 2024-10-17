@@ -11,7 +11,7 @@ use App\Http\Requests\OrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Models\Product;
-use App\Events\OrderProcessed;
+use App\Events\OrderProcessedEvent;
 
 class OrderController extends BaseController
 {
@@ -64,7 +64,7 @@ class OrderController extends BaseController
 
             DB::commit();
 
-            OrderProcessed::dispatch($order, 'received');
+            OrderProcessedEvent::dispatch($order, 'received');
 
             return $this->sendResponse(
                 new OrderResource($order), 'Order created successfully.'
@@ -165,7 +165,7 @@ class OrderController extends BaseController
 
             DB::commit();
 
-            OrderProcessed::dispatch($order, isset($validatedData['status']) ? $validatedData['status'] : 'updated');
+            OrderProcessedEvent::dispatch($order, isset($validatedData['status']) ? $validatedData['status'] : 'updated');
 
             return $this->sendResponse(
                 new OrderResource($order), 'Order updated successfully.'
@@ -198,7 +198,7 @@ class OrderController extends BaseController
             $order->delete();
             DB::commit();
 
-            OrderProcessed::dispatch($order, 'deleted');
+            OrderProcessedEvent::dispatch($order, 'deleted');
 
             return $this->sendResponse(
                 [], 'Order deleted successfully.'

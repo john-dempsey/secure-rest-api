@@ -12,7 +12,7 @@ use Illuminate\Queue\SerializesModels;
 
 use App\Models\Order;
 
-class OrderProcessed extends Mailable implements ShouldQueue
+class OrderProcessedMailable extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

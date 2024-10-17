@@ -8,7 +8,7 @@ use Illuminate\Queue\SerializesModels;
 
 use App\Models\Order;
 
-class OrderProcessed
+class OrderProcessedEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 

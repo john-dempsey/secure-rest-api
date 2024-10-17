@@ -13,8 +13,6 @@ use App\Policies\CustomerPolicy;
 use App\Policies\OrderPolicy;
 use App\Policies\SupplierPolicy;
 use App\Policies\ProductPolicy;
-use App\Events\OrderProcessed;
-use App\Listeners\OrderProcessedListener;
 
 class AppServiceProvider extends ServiceProvider
 {

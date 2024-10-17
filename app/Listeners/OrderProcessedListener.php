@@ -6,11 +6,11 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
 
-use App\Events\OrderProcessed as OrderProcessedEvent;
+use App\Events\OrderProcessedEvent;
 use App\Notifications\OrderNotification;
 
 use Illuminate\Support\Facades\Mail;
-use App\Mail\OrderProcessed as OrderProcessedMailable;
+use App\Mail\OrderProcessedMailable;
 
 use Throwable;
 
